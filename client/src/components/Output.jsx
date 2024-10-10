@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -27,11 +27,43 @@ const Output = ({ editorRef, language, id }) => {
   const [output, setOutput] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [emails, setEmails] = useState(['example1@test.com', 'example2@test.com']); // Initial email list
+  const [emails, setEmails] = useState([]); // Initial email list
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [isRemoving, setIsRemoving] = useState(false); // State to toggle remove mode
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to control dropdown visibility
+
+  // Fetch emails on component mount
+  useEffect(() => {
+    const fetchEmails = async () => {
+      try {
+        const response = await fetch(`http://localhost:5800/api/codes/access/${id}`, {
+          method: "GET",
+          credentials: 'include',
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setEmails(data.emails || []); // Assuming the response has an 'emails' field
+        } else {
+          throw new Error('Failed to fetch emails');
+        }
+      } catch (error) {
+        console.error('Error fetching emails:', error);
+        toast({
+          title: "Error",
+          description: "Unable to fetch email list.",
+          status: "error",
+          duration: 6000,
+        });
+      }
+    };
+
+    fetchEmails();
+  }, [id]); // Depend on `id` to fetch emails for the correct code
 
   const runCode = async () => {
     const sourceCode = editorRef.current.getValue();
@@ -101,9 +133,8 @@ const Output = ({ editorRef, language, id }) => {
   const handleEmailSubmit = async () => {
     if (newEmail) {
       try {
-        // API call to store the new email in the database
-        const response = await fetch(`http://localhost:5800/api/codes/give/${id}`, {
-          method: "PUT",
+        const response = await fetch(`http://localhost:5800/api/codes/${id}`, {
+          method: "GET",
           credentials: 'include',
           headers: {
             "Content-Type": "application/json",
@@ -148,7 +179,6 @@ const Output = ({ editorRef, language, id }) => {
 
   const removeEmail = async (emailToRemove) => {
     try {
-      // API call to remove the email from the database
       const response = await fetch(`http://localhost:5800/api/codes/take/${id}`, {
         method: "PUT",
         credentials: 'include',

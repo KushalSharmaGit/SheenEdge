@@ -100,7 +100,7 @@ export default function Component() {
           // Clear the input fields and close the modal
           setNewFileName("");
           setNewFileLanguage("");
-          setIsModalOpen(false);
+          setIsModalOpen(false);z
         } else {
           const errorData = await response.json();
           console.error("Failed to create file:", errorData.message);
